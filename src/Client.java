@@ -1,23 +1,37 @@
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Random;
 
-public class Client {
-    public static void main(String[] args) throws IOException {
-        String serverName = "myServer";
+public class Client implements Runnable {
 
-        int port = 6666;
+    @Override
+    public void run() {
+        String message = "Hello server";
+        int indexRandomPort = new Random().nextInt(Ports.portsList.length);
 
-
-        try{
-            Socket s=new Socket("127.0.0.1",port);
-            DataOutputStream dout =new DataOutputStream(s.getOutputStream());
-            dout.writeUTF("Hello " + serverName);
-            dout.flush();
-            dout.close();
-            s.close();
-        }catch (IOException e){
-            e.printStackTrace();
+        while (true){
+            try {
+                Socket s = new Socket("127.0.0.1", Ports.portsList[indexRandomPort]);
+                DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+                dout.writeUTF(message);
+                dout.flush();
+                dout.close();
+                s.close();
+                break;
+            } catch (IOException e) {
+                // ingored
+            }
         }
+
+    }
+
+    public void start() {
+        this.run();
+    }
+
+    public static void main(String[] args) throws IOException {
+        Client client = new Client();
+        client.start();
     }
 }
