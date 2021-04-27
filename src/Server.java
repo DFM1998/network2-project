@@ -1,8 +1,21 @@
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Server implements Runnable{
+
+    private HashMap<String, String> storage = new HashMap<>();
+
+    public HashMap<String, String> getStorage() {
+        return storage;
+    }
+
+    public void setStorage(String key,String value) {
+        this.storage.put(key, value);
+    }
+
     @Override
     public void run(){
         ServerSocket ss = null;
