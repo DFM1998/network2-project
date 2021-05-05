@@ -1,5 +1,8 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public final class Ports {
-    public static final int portsList[] = new int[]{
+    public static final ArrayList<Integer> portsList = new ArrayList<>(Arrays.asList(
             8000,
             8001,
             8002,
@@ -10,5 +13,5 @@ public final class Ports {
             8007,
             8008,
             8009
-    };
+    ));
 }

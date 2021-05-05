@@ -12,15 +12,17 @@ import java.util.regex.Pattern;
 
 public class Client implements Runnable {
 
-    public void connectToServer(int serverId, String inputString) {
+    public void connectToServer(int serverId, String outputString) {
         try {
             // create a connection
             Socket s = new Socket("127.0.0.1", serverId);
             // send the information to the server
             DataOutputStream output = new DataOutputStream(s.getOutputStream());
-            output.writeUTF(inputString);
+            // send the input to the server
+            output.writeUTF(outputString);
             // get the information from the server
             DataInputStream input = new DataInputStream(s.getInputStream());
+            // print the output that we got from the server
             System.out.println(input.readUTF());
             // close and flush the connection
             output.flush();
