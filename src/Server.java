@@ -47,9 +47,10 @@ public class Server implements Runnable {
                 String value = splitMessage[3];
                 putStorage(key, value);
                 outputStream.writeUTF("Server: information has been saved.");
-            } else if (str.substring(0, 3).equalsIgnoreCase("SERVER")) {
+            } else if (str.substring(0, 6).equalsIgnoreCase("SERVER")) {
                 //TODO: create connection between the nodes
                 //TODO: broadcast command (get)
+                System.out.println("TEST");
             }
             outputStream.flush();
             clientSocket.close();
@@ -82,6 +83,14 @@ public class Server implements Runnable {
         servers.add(node2);
         System.out.println(servers);
 
+        try {
+            Thread.sleep(10000);
+            DataOutputStream output = new DataOutputStream(node1.getOutputStream());
+            output.writeUTF("SERVER:hallo");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        };
+
     }
 
     @Override
@@ -103,7 +112,7 @@ public class Server implements Runnable {
         System.out.println("Used Port: " + port);
 
         try {
-            Thread.sleep(10000);
+            Thread.sleep(15000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
