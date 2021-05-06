@@ -31,8 +31,10 @@ public class Client implements Runnable {
             System.out.println(serverAnswer);
             String checkServerAnswer = serverAnswer.substring(0, 17);
             if (checkServerAnswer.equals("Server: searching")) {
-                
+                System.out.println("ECH WUARDEN");
+                System.out.println("TEST: " + input.readUTF());
             }
+
             // close and flush the connection
             output.flush();
             output.close();
@@ -74,14 +76,14 @@ public class Client implements Runnable {
                     System.out.println("Not right format: SET:<id>:<key>:<value> (Do not use ':' for the <value>)");
                 }
             } else if (inputString.substring(0, 5).equalsIgnoreCase("CHECK")) {
-                Pattern regex = Pattern.compile("(CHECK):[a-zA-Z0-9_]+", Pattern.CASE_INSENSITIVE);
+                Pattern regex = Pattern.compile("(CHECK):[a-zA-Z0-9_]+:[0-9]+", Pattern.CASE_INSENSITIVE);
                 Matcher message = regex.matcher(inputString);
                 if (message.find()) {
                     int serverId = 8000;
                     // send the information to the server
                     connectToServer(serverId, inputString);
                 } else {
-                    System.out.println("Not right format: CHECK:<key>");
+                    System.out.println("Not right format: CHECK:<key>:<TTL>");
                 }
             } else {
                 System.out.println("Not valid command, only GET, SET and CHECK (broadcast) allowed.");

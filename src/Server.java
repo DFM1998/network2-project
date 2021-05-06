@@ -1,4 +1,5 @@
 import javax.sound.sampled.Port;
+import java.awt.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,6 +31,7 @@ public class Server implements Runnable {
             Socket clientSocket = ss.accept();
             //input is the information that we get from the client
             DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+
             //output is the information send back to the client
             DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
             // convert UTF to string
@@ -59,11 +61,15 @@ public class Server implements Runnable {
                 String clientPort = splitMessage[3];
                 str = "CHECK:" + key + ":" + ttl + ":" + clientPort;
                 if (storage.containsKey(key)) {
-                    outputStream.writeUTF("Server: searching on the servers...");
-                    Socket clientAnswer = new Socket("127.0.0.1", Integer.parseInt(clientPort));
-                    DataOutputStream output = new DataOutputStream(clientAnswer.getOutputStream());
-                    output.writeUTF(storage.get(key));
-                    clientAnswer.close();
+                    if ((ss.getLocalPort()) == 8000) {
+                        outputStream.writeUTF(getValue(key));
+                    } else {
+                        Socket mainServer = new Socket("127.0.0.1", 8000);
+                        DataOutputStream mainServerOutput = new DataOutputStream(mainServer.getOutputStream());
+                        mainServerOutput.writeUTF("FOUND:" + getValue(key));
+                        mainServer.close();
+                    }
+
                 } else {
                     outputStream.writeUTF("Server: searching on the servers...");
                     if (ttl > 0) {
@@ -72,23 +78,29 @@ public class Server implements Runnable {
                 }
             }
 
-            outputStream.flush();
-            clientSocket.close();
             if (checkOtherServer) {
                 serverConnection(ss);
                 for (Socket server : servers) {
                     System.out.println(server);
-                    System.out.println("SINN ECH ...1");
                     DataOutputStream output = new DataOutputStream(server.getOutputStream());
-                    System.out.println("SINN ECH ...2");
                     output.writeUTF(str);
-                    System.out.println("SINN ECH ...3");
-                    DataInputStream input = new DataInputStream(server.getInputStream());
-                    System.out.println(input.readUTF());
-                    System.out.println("SINN ECH ...4");
                     server.close();
                 }
+                Socket waitNode = ss.accept();
+                DataInputStream dis2 = new DataInputStream(waitNode.getInputStream());
+                String str2 = (String) dis2.readUTF();
+                if (str2.substring(0, 5).equalsIgnoreCase("FOUND")) {
+                    System.out.println("ECH SINN DOOOOO");
+                    String[] splitMessage = str2.split(":");
+                    String value = splitMessage[1];
+                    System.out.println(value);
+                    outputStream.writeUTF(value);
+                }
+                waitNode.close();
             }
+
+            outputStream.flush();
+            //clientSocket.close();
             connection(ss);
         } catch (SocketTimeoutException s) {
             System.out.println("Socket timed out!");
