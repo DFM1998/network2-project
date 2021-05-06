@@ -35,6 +35,9 @@ public class Server implements Runnable {
             // convert UTF to string
             String str = (String) dis.readUTF();
 
+            System.out.println("Client (" + clientSocket.getPort() + ") said to server: " + str);
+
+            boolean checkOtherServer = false;
             // check if was a get or a set
             if (str.substring(0, 3).equalsIgnoreCase("GET")) {
                 String[] splitMessage = str.split(":");
@@ -47,13 +50,45 @@ public class Server implements Runnable {
                 String value = splitMessage[3];
                 putStorage(key, value);
                 outputStream.writeUTF("Server: information has been saved.");
-            } else if (str.substring(0, 6).equalsIgnoreCase("SERVER")) {
-                //TODO: create connection between the nodes
-                //TODO: broadcast command (get)
-                System.out.println("TEST");
+            } else if (str.substring(0, 5).equalsIgnoreCase("CHECK")) {
+                // broadcast command
+                String[] splitMessage = str.split(":");
+                String key = splitMessage[1];
+                int ttl = Integer.parseInt(splitMessage[2]);
+                --ttl;
+                String clientPort = splitMessage[3];
+                str = "CHECK:" + key + ":" + ttl + ":" + clientPort;
+                if (storage.containsKey(key)) {
+                    outputStream.writeUTF("Server: searching on the servers...");
+                    Socket clientAnswer = new Socket("127.0.0.1", Integer.parseInt(clientPort));
+                    DataOutputStream output = new DataOutputStream(clientAnswer.getOutputStream());
+                    output.writeUTF(storage.get(key));
+                    clientAnswer.close();
+                } else {
+                    outputStream.writeUTF("Server: searching on the servers...");
+                    if (ttl > 0) {
+                        checkOtherServer = true;
+                    }
+                }
             }
+
             outputStream.flush();
             clientSocket.close();
+            if (checkOtherServer) {
+                serverConnection(ss);
+                for (Socket server : servers) {
+                    System.out.println(server);
+                    System.out.println("SINN ECH ...1");
+                    DataOutputStream output = new DataOutputStream(server.getOutputStream());
+                    System.out.println("SINN ECH ...2");
+                    output.writeUTF(str);
+                    System.out.println("SINN ECH ...3");
+                    DataInputStream input = new DataInputStream(server.getInputStream());
+                    System.out.println(input.readUTF());
+                    System.out.println("SINN ECH ...4");
+                    server.close();
+                }
+            }
             connection(ss);
         } catch (SocketTimeoutException s) {
             System.out.println("Socket timed out!");
@@ -62,13 +97,15 @@ public class Server implements Runnable {
         }
     }
 
+    // create connection between the nodes
     private void serverConnection(ServerSocket ss) throws IOException {
-        int index = (Ports.portsList.indexOf(ss.getLocalPort())) + 1;
-        if (index >= Ports.portsList.size()){
-            index = 0;
+        servers.clear();
+        int index1 = (Ports.portsList.indexOf(ss.getLocalPort())) + 1;
+        if (index1 >= Ports.portsList.size()) {
+            index1 = 0;
         }
 
-        Socket node1 = new Socket("127.0.0.1", Ports.portsList.get(index));
+        Socket node1 = new Socket("127.0.0.1", Ports.portsList.get(index1));
         servers.add(node1);
         Ports.portsList.indexOf(ss.getLocalPort());
 
@@ -82,14 +119,6 @@ public class Server implements Runnable {
         Socket node2 = new Socket("127.0.0.1", Ports.portsList.get(index2));
         servers.add(node2);
         System.out.println(servers);
-
-        try {
-            Thread.sleep(10000);
-            DataOutputStream output = new DataOutputStream(node1.getOutputStream());
-            output.writeUTF("SERVER:hallo");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        };
 
     }
 
@@ -112,17 +141,10 @@ public class Server implements Runnable {
         System.out.println("Used Port: " + port);
 
         try {
-            Thread.sleep(15000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        try {
-            serverConnection(ss);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
 
         // check if the connection can be done
         try {
