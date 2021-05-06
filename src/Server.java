@@ -69,7 +69,6 @@ public class Server implements Runnable {
                         mainServerOutput.writeUTF("FOUND:" + getValue(key));
                         mainServer.close();
                     }
-
                 } else {
                     outputStream.writeUTF("Server: searching on the servers...");
                     if (ttl > 0) {
@@ -86,21 +85,26 @@ public class Server implements Runnable {
                     output.writeUTF(str);
                     server.close();
                 }
-                Socket waitNode = ss.accept();
-                DataInputStream dis2 = new DataInputStream(waitNode.getInputStream());
-                String str2 = (String) dis2.readUTF();
-                if (str2.substring(0, 5).equalsIgnoreCase("FOUND")) {
-                    System.out.println("ECH SINN DOOOOO");
-                    String[] splitMessage = str2.split(":");
-                    String value = splitMessage[1];
-                    System.out.println(value);
-                    outputStream.writeUTF(value);
+
+                while (true){
+                    Socket waitNode = ss.accept();
+                    DataInputStream dis2 = new DataInputStream(waitNode.getInputStream());
+                    String str2 = (String) dis2.readUTF();
+                    if (str2.substring(0, 5).equalsIgnoreCase("FOUND")) {
+                        System.out.println("ECH SINN DOOOOO");
+                        String[] splitMessage = str2.split(":");
+                        String value = splitMessage[1];
+                        System.out.println(value);
+                        outputStream.writeUTF(value);
+                        break;
+                    }
+                    waitNode.close();
                 }
-                waitNode.close();
+
             }
 
             outputStream.flush();
-            //clientSocket.close();
+            clientSocket.close();
             connection(ss);
         } catch (SocketTimeoutException s) {
             System.out.println("Socket timed out!");
