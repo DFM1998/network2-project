@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 // GET:8000:HALLO
 // SET:8001:YES:TEST2
 // CHECK:YES:5
+// SET:8007:NO:HALLO
 
 public class Client implements Runnable {
 
@@ -29,10 +30,8 @@ public class Client implements Runnable {
             // print the output that we got from the server
             String serverAnswer = input.readUTF();
             System.out.println(serverAnswer);
-            String checkServerAnswer = serverAnswer.substring(0, 17);
-            if (checkServerAnswer.equals("Server: searching")) {
-                System.out.println("ECH WUARDEN");
-                System.out.println("TEST: " + input.readUTF());
+            if (outputString.substring(0, 5).equalsIgnoreCase("CHECK")) {
+                System.out.println(input.readUTF());
             }
 
             // close and flush the connection

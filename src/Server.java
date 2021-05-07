@@ -27,6 +27,7 @@ public class Server implements Runnable {
     private void connection(ServerSocket ss) throws IOException {
 
         try {
+            boolean checker = false;
             //establishes connection
             Socket clientSocket = ss.accept();
             //input is the information that we get from the client
@@ -64,12 +65,17 @@ public class Server implements Runnable {
                     if ((ss.getLocalPort()) == 8000) {
                         outputStream.writeUTF(getValue(key));
                     } else {
+                        // if found the key, then let's send it the main server which is the 8000
                         Socket mainServer = new Socket("127.0.0.1", 8000);
                         DataOutputStream mainServerOutput = new DataOutputStream(mainServer.getOutputStream());
                         mainServerOutput.writeUTF("FOUND:" + getValue(key));
+                        mainServerOutput.flush();
                         mainServer.close();
                     }
                 } else {
+                    if ((ss.getLocalPort()) == 8000) {
+                        checker = true;
+                    }
                     outputStream.writeUTF("Server: searching on the servers...");
                     if (ttl > 0) {
                         checkOtherServer = true;
@@ -77,6 +83,7 @@ public class Server implements Runnable {
                 }
             }
 
+            // this will just happen in the 8000 server
             if (checkOtherServer) {
                 serverConnection(ss);
                 for (Socket server : servers) {
@@ -86,19 +93,22 @@ public class Server implements Runnable {
                     server.close();
                 }
 
-                while (true){
-                    Socket waitNode = ss.accept();
-                    DataInputStream dis2 = new DataInputStream(waitNode.getInputStream());
-                    String str2 = (String) dis2.readUTF();
-                    if (str2.substring(0, 5).equalsIgnoreCase("FOUND")) {
-                        System.out.println("ECH SINN DOOOOO");
-                        String[] splitMessage = str2.split(":");
-                        String value = splitMessage[1];
-                        System.out.println(value);
-                        outputStream.writeUTF(value);
-                        break;
+                if(checker){
+                    while(true){
+                        System.out.println("ECH SINN DOOOOOsadadad");
+                        Socket waitNode = ss.accept();
+                        DataInputStream dis2 = new DataInputStream(waitNode.getInputStream());
+                        String str2 = (String) dis2.readUTF();
+                        if (str2.substring(0, 5).equalsIgnoreCase("FOUND")) {
+                            System.out.println("ECH SINN DOOOOO");
+                            String[] splitMessage2 = str2.split(":");
+                            String value = splitMessage2[1];
+                            System.out.println(value);
+                            outputStream.writeUTF(value);
+                            break;
+                        }
+                        waitNode.close();
                     }
-                    waitNode.close();
                 }
 
             }
@@ -157,7 +167,7 @@ public class Server implements Runnable {
         System.out.println("Used Port: " + port);
 
         try {
-            Thread.sleep(5000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
