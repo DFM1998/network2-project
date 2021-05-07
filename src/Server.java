@@ -27,7 +27,6 @@ public class Server implements Runnable {
     private void connection(ServerSocket ss) throws IOException {
 
         try {
-            boolean checker = false;
             //establishes connection
             Socket clientSocket = ss.accept();
             //input is the information that we get from the client
@@ -73,9 +72,6 @@ public class Server implements Runnable {
                         mainServer.close();
                     }
                 } else {
-                    if ((ss.getLocalPort()) == 8000) {
-                        checker = true;
-                    }
                     outputStream.writeUTF("Server: searching on the servers...");
                     if (ttl > 0) {
                         checkOtherServer = true;
@@ -93,8 +89,8 @@ public class Server implements Runnable {
                     server.close();
                 }
 
-                if(checker){
-                    while(true){
+                if ((ss.getLocalPort()) == 8000) {
+                    while (true) {
                         System.out.println("ECH SINN DOOOOOsadadad");
                         Socket waitNode = ss.accept();
                         DataInputStream dis2 = new DataInputStream(waitNode.getInputStream());
