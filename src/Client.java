@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,15 +13,16 @@ import java.util.regex.Pattern;
 // SET:8001:YES:TEST2
 // CHECK:YES:5
 // SET:8007:NO:HALLO
+// SET:8009:NO:HALLO
+// SET:8008:NO:HALLO
 
 public class Client implements Runnable {
-
     public void connectToServer(int serverId, String outputString) {
         try {
             // create a connection
             Socket s = new Socket("127.0.0.1", serverId);
             // add client port to the string
-            outputString += ":" + s.getLocalPort();
+            //outputString += ":" + s.getLocalPort();
             // send the information to the server
             DataOutputStream output = new DataOutputStream(s.getOutputStream());
             // send the input to the server
@@ -59,7 +61,7 @@ public class Client implements Runnable {
                     String[] splitMessage = inputString.split(":");
                     int serverId = Integer.parseInt(splitMessage[1]);
                     // send the information to the server
-                    connectToServer(serverId, inputString);
+                    connectToServer(serverId, inputString.toUpperCase());
                 } else {
                     System.out.println("Not right format: GET:<id>:<key>");
                 }
@@ -70,17 +72,22 @@ public class Client implements Runnable {
                     String[] splitMessage = inputString.split(":");
                     int serverId = Integer.parseInt(splitMessage[1]);
                     // send the information to the server
-                    connectToServer(serverId, inputString);
+                    connectToServer(serverId, inputString.toUpperCase());
                 } else {
                     System.out.println("Not right format: SET:<id>:<key>:<value> (Do not use ':' for the <value>)");
                 }
             } else if (inputString.substring(0, 5).equalsIgnoreCase("CHECK")) {
-                Pattern regex = Pattern.compile("(CHECK):[a-zA-Z0-9_]+:[0-9]+", Pattern.CASE_INSENSITIVE);
+                Pattern regex = Pattern.compile("(CHECK):[a-zA-Z0-9_]+", Pattern.CASE_INSENSITIVE);
                 Matcher message = regex.matcher(inputString);
                 if (message.find()) {
-                    int serverId = 8000;
+                    Random random = new Random(System.currentTimeMillis());
+                    int index = random.nextInt(Ports.portsList.size());
+                    int serverId = Ports.portsList.get(index);
+                    //time to live is 5 inorder to check all the nodes for the information
+                    int ttl = 5;
+                    inputString += ":" + ttl + ":" + serverId;
                     // send the information to the server
-                    connectToServer(serverId, inputString);
+                    connectToServer(serverId, inputString.toUpperCase());
                 } else {
                     System.out.println("Not right format: CHECK:<key>:<TTL>");
                 }

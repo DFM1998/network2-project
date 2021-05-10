@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,8 +25,9 @@ public class Server implements Runnable {
         this.storage.put(key, value);
     }
 
-    private void connection(ServerSocket ss) throws IOException {
 
+    private void connection(ServerSocket ss) throws IOException {
+        int portNumber=0;
         try {
             //establishes connection
             Socket clientSocket = ss.accept();
@@ -47,6 +49,7 @@ public class Server implements Runnable {
                 String output = getValue(key);
                 outputStream.writeUTF(output);
             } else if (str.substring(0, 3).equalsIgnoreCase("SET")) {
+                // TODO Test if the same key overwrites the first one
                 String[] splitMessage = str.split(":");
                 String key = splitMessage[2];
                 String value = splitMessage[3];
@@ -57,29 +60,36 @@ public class Server implements Runnable {
                 String[] splitMessage = str.split(":");
                 String key = splitMessage[1];
                 int ttl = Integer.parseInt(splitMessage[2]);
-                --ttl;
-                String clientPort = splitMessage[3];
-                str = "CHECK:" + key + ":" + ttl + ":" + clientPort;
+                portNumber = Integer.parseInt(splitMessage[3]);
+                ttl--;
+                str = "CHECK:" + key + ":" + ttl + ":" +portNumber;
+                outputStream.writeUTF("Server: searching on the servers...");
                 if (storage.containsKey(key)) {
-                    if ((ss.getLocalPort()) == 8000) {
+                    if ((ss.getLocalPort()) == portNumber) {
                         outputStream.writeUTF(getValue(key));
                     } else {
-                        // if found the key, then let's send it the main server which is the 8000
-                        Socket mainServer = new Socket("127.0.0.1", 8000);
+                        // if found the key, then let's send it the main server
+                        Socket mainServer = new Socket("127.0.0.1", portNumber);
                         DataOutputStream mainServerOutput = new DataOutputStream(mainServer.getOutputStream());
                         mainServerOutput.writeUTF("FOUND:" + getValue(key));
                         mainServerOutput.flush();
+                        mainServerOutput.close();
                         mainServer.close();
                     }
                 } else {
-                    outputStream.writeUTF("Server: searching on the servers...");
                     if (ttl > 0) {
                         checkOtherServer = true;
+                    } else {
+                        Socket mainServer = new Socket("127.0.0.1", portNumber);
+                        DataOutputStream mainServerOutput = new DataOutputStream(mainServer.getOutputStream());
+                        mainServerOutput.writeUTF("TTL ran out of time...");
+                        mainServerOutput.flush();
+                        mainServerOutput.close();
+                        mainServer.close();
                     }
                 }
             }
 
-            // this will just happen in the 8000 server
             if (checkOtherServer) {
                 serverConnection(ss);
                 for (Socket server : servers) {
@@ -88,28 +98,30 @@ public class Server implements Runnable {
                     output.writeUTF(str);
                     server.close();
                 }
-
-                if ((ss.getLocalPort()) == 8000) {
-                    while (true) {
-                        System.out.println("ECH SINN DOOOOOsadadad");
+                if (ss.getLocalPort() == portNumber) {
+                    int i = 0;
+                    String answerToClient = "The package died, because the TTL ran out of time...";
+                    while (i<16) {
                         Socket waitNode = ss.accept();
+                        System.out.println("ECH SINN DOOOOOsadadad");
                         DataInputStream dis2 = new DataInputStream(waitNode.getInputStream());
                         String str2 = (String) dis2.readUTF();
-                        if (str2.substring(0, 5).equalsIgnoreCase("FOUND")) {
+                        System.out.println("Answer from server "+"(i) :"+i+" : " + str2);
+                        i++;
+                        waitNode.close();
+                        if(str2.substring(0, 5).equalsIgnoreCase("FOUND")) {
                             System.out.println("ECH SINN DOOOOO");
                             String[] splitMessage2 = str2.split(":");
-                            String value = splitMessage2[1];
-                            System.out.println(value);
-                            outputStream.writeUTF(value);
+                            answerToClient = splitMessage2[1];
                             break;
                         }
-                        waitNode.close();
                     }
+                    outputStream.writeUTF(answerToClient);
                 }
-
             }
 
             outputStream.flush();
+            outputStream.close();
             clientSocket.close();
             connection(ss);
         } catch (SocketTimeoutException s) {
@@ -141,7 +153,6 @@ public class Server implements Runnable {
         Socket node2 = new Socket("127.0.0.1", Ports.portsList.get(index2));
         servers.add(node2);
         System.out.println(servers);
-
     }
 
     @Override
@@ -162,11 +173,12 @@ public class Server implements Runnable {
         }
         System.out.println("Used Port: " + port);
 
-        try {
+        /*try {
             Thread.sleep(1000);
+
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
 
         // check if the connection can be done
         try {
