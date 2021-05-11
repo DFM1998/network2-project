@@ -71,6 +71,11 @@ public class Client implements Runnable {
                 if (message.find()) {
                     String[] splitMessage = inputString.split(":");
                     int serverId = Integer.parseInt(splitMessage[1]);
+                    if(serverId == 0000){
+                        Random random = new Random(System.currentTimeMillis());
+                        int index = random.nextInt(Ports.portsList.size());
+                        serverId = Ports.portsList.get(index);
+                    }
                     // send the information to the server
                     connectToServer(serverId, inputString.toUpperCase());
                 } else {
