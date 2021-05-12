@@ -44,8 +44,9 @@ public class Server implements Runnable {
                 // check if key has been found
                 if (getValue(key) == null) {
                     output = "Server ("+ss.getLocalPort()+"): Key does not exist";
+                }else{
+                    output = "Server ("+ss.getLocalPort()+"): " + getValue(key);
                 }
-                output = "Server ("+ss.getLocalPort()+"): " + getValue(key);
                 outputStream.writeUTF(output);
             } else if (str.substring(0, 3).equalsIgnoreCase("SET")) {
                 String[] splitMessage = str.split(":");

@@ -88,7 +88,7 @@ public class Client implements Runnable {
                     // send the information to the server
                     connectToServer(serverId, inputString.toUpperCase());
                 } else {
-                    System.out.println("Not right format: CHECK:<key>:<TTL>");
+                    System.out.println("Not right format: CHECK:<key>");
                 }
             } else {
                 System.out.println("Not valid command, only GET, SET and CHECK (broadcast) allowed.");
