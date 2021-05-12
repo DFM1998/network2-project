@@ -40,11 +40,12 @@ public class Server implements Runnable {
             if (str.substring(0, 3).equalsIgnoreCase("GET")) {
                 String[] splitMessage = str.split(":");
                 String key = splitMessage[2];
-                String output = getValue(key);
+                String output;
                 // check if key has been found
-                if (output == null) {
+                if (getValue(key) == null) {
                     output = "Server ("+ss.getLocalPort()+"): Key does not exist";
                 }
+                output = "Server ("+ss.getLocalPort()+"): " + getValue(key);
                 outputStream.writeUTF(output);
             } else if (str.substring(0, 3).equalsIgnoreCase("SET")) {
                 String[] splitMessage = str.split(":");
